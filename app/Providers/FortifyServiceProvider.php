@@ -32,11 +32,11 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void//la logique au demarage
     {
 
-        Fortify::ignoreRoutes();
+        //Fortify::ignoreRoutes();
 
-        /**
-         * Désactivation des vues Blade
-         * (Fortify ne doit JAMAIS essayer de charger une vue dans une SPA)
+        /*
+          Désactivation des vues Blade
+          (Fortify ne doit JAMAIS essayer de charger une vue dans une SPA)
          */
         Fortify::loginView(fn() => abort(404));
         Fortify::registerView(fn() => abort(404));
