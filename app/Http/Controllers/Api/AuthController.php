@@ -1,5 +1,9 @@
 <?php
+/*///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+N'EST PAS BRANCHE AUX ROUTES , PERMET DE COMPRENDRE LE MECHANISME DE FORTIFY
+
+///////////////////////////////////////////////////////////////////////////////////////////////*/
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -33,7 +37,7 @@ class AuthController extends Controller
             return response()->json(['message' => ' informations erronées'], 401); 
         }
 
-        $token = $user->createToken('firstToken')->plainTextToken; //generation d'un Api token avec sanctum
+        $token = $user->createToken('api-token')->plainTextToken; //generation d'un Api token avec sanctum
 
         return response()->json([
             'message' => 'Connexion reussie ',
@@ -44,14 +48,13 @@ class AuthController extends Controller
 
     public function register(RegisterUserRequest $request){
         $validated = $request->validated();
-        dd('register hit');
         $user = User::create([
             'name' =>$validated['name'], 
             'email' =>$validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
 
-        $token = $user->createToken('firstToken')->plainTextToken; 
+        $token = $user->createToken('api-token')->plainTextToken; 
 
         return response()->json([
             'message' => 'Utilisateur enregistré!',
@@ -60,7 +63,7 @@ class AuthController extends Controller
         ],201);
     }
 
-    public function loggout( Request $request){
+    public function logout( Request $request){
         $request->user()->currentAccessToken()->delete();
         
         return response()->json([
@@ -68,10 +71,10 @@ class AuthController extends Controller
         ]);
     }
 
-    public function me(Request $request){
+    /*public function me(Request $request){
         return response()->json([
             'user' => $request->user(),
         ]);
-    }
+    }*/
     
 }

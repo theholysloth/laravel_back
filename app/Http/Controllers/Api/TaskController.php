@@ -16,7 +16,7 @@ class TaskController extends Controller
      */
     public function index()
     {
-        return TaskResource::collection(Task::orderBy('id')->cursorPaginate()); //colection permet de retourner une liste de plusieurs elements
+        return TaskResource::collection(Task::orderBy('id')->simplePaginate()); //colection permet de retourner une liste de plusieurs elements
         
         /*il existe : 
         paginate:  le nombre total d’éléments, le nombre total de pages,la page actuelle,les liens “précédent / suivant”, les liens numérotés
