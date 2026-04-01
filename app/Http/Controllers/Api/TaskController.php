@@ -8,15 +8,28 @@ use App\Models\Task;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
+use App\Policies\TaskPolicy;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class TaskController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    use AuthorizesRequests;
+    
+    public function index(Request $request)
     {
-        return TaskResource::collection(Task::orderBy('id')->simplePaginate()); //colection permet de retourner une liste de plusieurs elements
+        $user = $request->user(); 
+        if ($user->can('view all tasks')){
+            return TaskResource::collection(Task::latest()->paginate());
+        }else{
+            return TaskResource::collection(
+            $request->user()->tasks()->latest()->paginate()
+            //Task::orderBy('id')->simplePaginate()
+            ); //colection permet de retourner une liste de plusieurs elements
+        }
         
         /*il existe : 
         paginate:  le nombre total d’éléments, le nombre total de pages,la page actuelle,les liens “précédent / suivant”, les liens numérotés
@@ -30,8 +43,10 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request)
     {//grace aux fichiers de validation (formRequest dans Requests), Laravel valide automatiquement avant d'entrer dans le controller 
-        $task = Task::create($request->validated());//la classe FormRequest offre validated 
-
+        //$task = Task::create($request->validated());//la classe FormRequest offre validated 
+        $task = $request->user()->tasks()->create(
+            $request->validated()
+        ); 
         return response()->json($task,201);
     }
 
@@ -40,6 +55,7 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
+        $this->authorize('view', $task);//laravel demande à la policy, est ce que l'user a le droit de ...
         return new TaskResource($task);
     }
 
@@ -57,9 +73,11 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, Task $task)
     {
-        $task ->update($request->validated());
+        $this->authorize('update',$task);
+        $validated = $request->validated();
+        $task ->update($validated);
 
-        return response()->json($task);
+        return new TaskResource($task);
     }
 
     /**
@@ -67,6 +85,7 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
+        $this->authorize('delete',$task);
         $task->delete(); 
         return response()->noContent();
     }
