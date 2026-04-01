@@ -2,19 +2,18 @@
 
 namespace App\Http\Requests;
 
-//use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class LoginUserRequest extends FormRequest
+class UpdateUserRoleRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;//determine si l'user actuel puet executer la requete
-        //return auth()->user()?->is_admin; 
-        //return auth()->id() === $this->route('user')->id;//si c'est le bon user
+        return true;
     }
 
     /**
@@ -25,9 +24,11 @@ class LoginUserRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'role' => ['required', 
+                        'string', 
+                        Rule::in(['user', 'admin','super-admin'])
+                ],
             //
-            'email' => ['required', 'string', 'email'], 
-            'password' => ['required', 'string'], 
         ];
     }
 }
