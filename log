@@ -1,22 +1,17 @@
-<q-dialog v-model="dialog">
+<q-dialog v-model="editDialog">
   <q-card style="min-width: 400px;">
     
     <q-card-section>
-      <div class="text-h6">Ajouter utilisateur</div>
+      <div class="text-h6">Modifier utilisateur</div>
     </q-card-section>
 
     <q-card-section class="q-gutter-md">
 
-      <q-input v-model="form.name" label="Nom" />
-
-      <q-input v-model="form.email" label="Email" />
-
-      <q-input v-model="form.password" label="Password" type="password" />
-
-      <q-input v-model="form.password_confirmation" label="Confirmer" type="password" />
+      <q-input v-model="editedUser.name" label="Nom" />
+      <q-input v-model="editedUser.email" label="Email" />
 
       <q-select
-        v-model="form.role"
+        v-model="editedUser.role"
         :options="adminStore.roles.map(r => r.name)"
         label="Rôle"
       />
@@ -25,7 +20,7 @@
 
     <q-card-actions align="right">
       <q-btn flat label="Annuler" v-close-popup />
-      <q-btn color="primary" label="Créer" @click="submit" />
+      <q-btn color="primary" label="Mettre à jour" @click="updateUser" />
     </q-card-actions>
 
   </q-card>
