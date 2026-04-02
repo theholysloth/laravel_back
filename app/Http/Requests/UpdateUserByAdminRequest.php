@@ -4,8 +4,10 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class CreateUserByAdminRequest extends FormRequest
+
+class UpdateUserByAdminRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,9 +27,9 @@ class CreateUserByAdminRequest extends FormRequest
         return [
             //
             'name' => ['required', 'string', 'min:2'], 
-            'email' => ['required', 'string','email','max:99','unique:users,email'],
-            'password' => ['required', 'confirmed', 'min:8'],
-            'role' => ['required', 'string','exists:roles,name']
+            'email' => ['required','string','email','max:99',
+                Rule::unique('users', 'email')->ignore($this->user)],
+            'role' => ['required', 'exists:roles,name'],
         ];
     }
 }
