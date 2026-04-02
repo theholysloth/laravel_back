@@ -22,13 +22,22 @@ Route::middleware('auth:sanctum')->group(function () {//pour acceder à ces rout
             'user'=> $request->user()->load('roles'),
         ]);
     });
-    Route::post('/logout', [AuthController::class, 'logout']);
-
     Route::get('/users', [UserManagementController::class,'index']);
-    Route::put('/users/{user}/role', [UserManagementController::class,'updateRole']);
     Route::get('/roles', [UserManagementController::class,'roles']);
+    Route::get('/permissions', [UserManagementController::class,'permissions']);
 
-    Route::post('/users', [CreateUserByAdminRequest::class,'store']);
+    Route::post('/users', [UserManagementController::class,'store']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/roles', [UserManagementController::class, 'storeRole']);
+
+
+    Route::put('/users/{user}/role', [UserManagementController::class,'updateRole']);
+    Route::put('/users/{user}', [UserManagementController::class,'update']);
+    Route::put('/roles/{role}', [UserManagementController::class,'updateRolePermissions']);
+
+
+    Route::delete('/users/{user}', [UserManagementController::class,'destroy']);
+    Route::delete('/roles/{role}', [UserManagementController::class,'destroy']);
 
     Route::apiResource('tasks', TaskController::class);
 
