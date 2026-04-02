@@ -25,3 +25,15 @@
 
   </q-card>
 </q-dialog>
+
+
+function confirmDelete(id) {
+  $q.dialog({
+    title: 'Confirmation',
+    message: 'Supprimer cet utilisateur ?',
+    cancel: true,
+    persistent: true
+  }).onOk(async () => {
+    await adminStore.deleteUser(id)
+  })
+}
