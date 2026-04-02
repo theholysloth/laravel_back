@@ -41,7 +41,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Connexion reussie ',
-            'user' => $user, 
+            'user' => $user->load('roles'), 
             'token' => $token
         ]);
     }
