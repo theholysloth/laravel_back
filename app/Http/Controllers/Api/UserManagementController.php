@@ -59,7 +59,7 @@ class UserManagementController extends Controller
 
     public function roles(){
         $this->authorize('viewAny',User::class);
-        $roles = Role::with('permissions')   // ← AJOUT ICI
+        $roles = Role::with('permissions')   
                 ->select('id','name')
                 ->orderBy('name')
                 ->get();
@@ -134,18 +134,23 @@ class UserManagementController extends Controller
 
     public function storeRole(Request $request){
         $this->authorize('assignRole', User::class);
+        $defaultPermission = 'create tasks';
 
         $validated = $request->validate([
             'name'=>['required', 'string', 'unique:roles,name'], 
-            'permissions' => ['array']
+            'permissions' => ['required','array' , 'min:1']
         ]);
         $role = Role::create([
             'name' =>$validated['name'], 
+            'guard_name' => 'web',
         ]);
 
-        if(!empty($validated['permissions'])){
-            $role->syncPermissions($validated['permissions']?? []);
-        }
+        $permissions = array_unique([
+            $defaultPermission,
+            ...$validated['permissions']
+        ]);
+
+        $role->syncPermissions($permissions);
 
 
         return response()->json([
@@ -159,13 +164,17 @@ class UserManagementController extends Controller
 
         $validated = $request->validate([
             'name'=> ['required', 'string'], 
-            'permissions' => ['array']
+            'permissions' => ['required','array' , 'min:1']
         ]);
 
-        $role->update([
-            'name' =>$validated['name'], 
-        ]);
-        $role->syncPermissions($validated['permissions']??[]);
+        $permissions = array_unique([
+        'create tasks',
+        ...$validated['permissions']
+    ]);
+
+$role->syncPermissions($permissions);
+
+
 
         return response()->json([
             'message' => 'Rôle mis à jour avec succès',
