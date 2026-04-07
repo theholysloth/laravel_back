@@ -1,0 +1,116 @@
+<?php 
+
+namespace App\Services;
+
+use App\Models\User;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Hash;
+use Exception;
+
+class UserManagementService {
+    public function createUser(array $data): User {
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'], 
+            'password' => Hash::make($data['password']),
+        ]);
+
+        $user->assignRole($data['role']); 
+        return $user->load('roles');
+    }
+
+    public function updateUser(User $user, array $data):User{
+        $user = User::update([
+            'name' => $data['name'],
+            'email' => $data['email'], 
+        ]);
+
+        $user->synchRoles([$data['role']]);
+
+        return $user->load('roles');
+    }
+
+    public function deleteUser(){
+        if ($user->hasRole('super-admin')) {
+            $count = User::role('super-admin')->count();
+
+            if ($count <= 1) {
+                throw new Exception('Impossible de supprimer le dernier super-admin.');
+            }
+        }
+
+        $user->delete();
+    }
+
+    public function listRoles()
+    {
+        return Role::with('permissions')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function updateUserRole(User $user, string $newRole): User
+    {
+        $isCurrentlySuperAdmin = $user->hasRole('super-admin');
+        $isBecomingSuperAdmin  = $newRole === 'super-admin';
+
+        if ($isCurrentlySuperAdmin && ! $isBecomingSuperAdmin) {
+            $superAdminCount = User::role('super-admin')->count();
+
+            if ($superAdminCount <= 1) {
+                throw new Exception('Impossible de retirer le dernier super-admin.');
+            }
+        }
+
+        $user->syncRoles([$newRole]);
+
+        return $user->load('roles');
+    }
+
+    public function createRole(array $data): Role
+    {
+        $defaultPermission = 'create tasks';
+
+        $role = Role::create([
+            'name'       => $data['name'],
+            'guard_name' => 'web',
+        ]);
+
+        $permissions = array_unique([
+            $defaultPermission,
+            ...$data['permissions'],
+        ]);
+
+        $role->syncPermissions($permissions);
+
+        return $role->load('permissions');
+    }
+
+    public function updateRolePermissions(Role $role, array $data): Role
+    {
+        $permissions = array_unique([
+            'create tasks',
+            ...$data['permissions'],
+        ]);
+
+        $role->syncPermissions($permissions);
+
+        return $role->load('permissions');
+    }
+
+    public function deleteRole(Role $role): void
+    {
+        if ($role->name === 'super-admin') {
+            throw new Exception('Impossible de supprimer le rôle super-admin.');
+        }
+
+        $role->delete();
+    }
+
+    public function listPermissions()
+    {
+        return Permission::select('id', 'name')->get();
+    }
+}
