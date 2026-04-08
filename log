@@ -1,5 +1,18 @@
 <?php 
+
+namespace App\Services;
+
+use App\Models\User;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Hash;
+use Exception;
+
 class UserManagementService {
+
+    /* 
+    Helpers
+     */
 
     private function ensureNotLastSuperAdmin(User $user): void
     {
@@ -10,6 +23,15 @@ class UserManagementService {
                 throw new Exception('Impossible de modifier le dernier super-admin.');
             }
         }
+    }
+
+    /* 
+    Users
+     */
+
+    public function listUsers()
+    {
+        return User::with('roles')->latest()->get();
     }
 
     public function createUser(array $data): User {
@@ -25,12 +47,12 @@ class UserManagementService {
     }
 
     public function updateUser(User $user, array $data): User {
+        $this->ensureNotLastSuperAdmin($user);
+
         $user->update([
             'name' => $data['name'],
             'email' => $data['email'], 
         ]);
-
-        $this->ensureNotLastSuperAdmin($user);
 
         $user->syncRoles([$data['role']]);
 
@@ -40,6 +62,27 @@ class UserManagementService {
     public function deleteUser(User $user): void {
         $this->ensureNotLastSuperAdmin($user);
         $user->delete();
+    }
+
+    /* 
+    Roles
+    */
+
+    public function listRoles()
+    {
+        return Role::with('permissions')
+            ->select('id','name')
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function updateUserRole(User $user, string $role): User
+    {
+        $this->ensureNotLastSuperAdmin($user);
+
+        $user->syncRoles([$role]);
+
+        return $user->load('roles');
     }
 
     public function createRole(array $data): Role
@@ -57,5 +100,35 @@ class UserManagementService {
         $role->syncPermissions($permissions);
 
         return $role->load('permissions');
+    }
+
+    public function updateRolePermissions(Role $role, array $data): Role
+    {
+        $permissions = array_unique([
+            'create tasks',
+            ...$data['permissions'],
+        ]);
+
+        $role->syncPermissions($permissions);
+
+        return $role->load('permissions');
+    }
+
+    public function deleteRole(Role $role): void
+    {
+        if ($role->name === 'super-admin') {
+            throw new Exception('Impossible de supprimer le rôle super-admin.');
+        }
+
+        $role->delete();
+    }
+
+    /* 
+      Permissions
+    */
+
+    public function listPermissions()
+    {
+        return Permission::select('id', 'name')->get();
     }
 }
