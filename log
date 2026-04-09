@@ -1,134 +1,200 @@
-<?php 
+import { mount } from '@vue/test-utils' //mount permet de monter le composant complet dans l'env test
+import { describe, it, expect, vi } from 'vitest'
+import TaskForm from './TaskForm.vue'//etant donné qu'on teste TaskForm , on l'import
+//import { useQuasar } from 'quasar'
+import { nextTick } from 'vue' //nextTick permet d'attendre la maj du dom apres une action
 
-namespace App\Services;
+describe('TaskForm', () => {
+    //
+  it('affichage en mode add', () => {
+    const wrapper = mount(TaskForm, {
+      props: { mode: 'add' }//on cree des props qui sont utile pour le composant 
+    })
 
-use App\Models\User;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\Hash;
-use Exception;
+    expect(wrapper.find('input')).toBeTruthy()//wrapper permet d'interragir avec TaskForm car le composant y est stocké
+    expect(wrapper.find('button').text()).toContain('Ajouter')//le button en mode add
+  })
 
-class UserManagementService {
 
-    /* 
-    Helpers
-     */
 
-    private function ensureNotLastSuperAdmin(User $user): void
-    {
-        if ($user->hasRole('super-admin')) {
-            $count = User::role('super-admin')->count();
 
-            if ($count <= 1) {
-                throw new Exception('Impossible de modifier le dernier super-admin.');
-            }
-        }
-    }
+  it('add-task en mode add', async () => {
+    const wrapper = mount(TaskForm, {
+      props: { mode: 'add' }
+    })
+    
 
-    /* 
-    Users
-     */
+    const inputs = wrapper.findAll('.q-field__native')//on recupere les champs du formulaire
+    await inputs[0].setValue('junior')
+    await inputs[1].setValue('Faire le rapport')
+    await inputs[2].setValue('2025-01-01')
 
-    public function listUsers()
-    {
-        return User::with('roles')->latest()->get();
-    }
+    await wrapper.find('form').trigger('submit.prevent')//on envoie 
+    await nextTick()
 
-    public function createUser(array $data): User {
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'], 
-            'password' => Hash::make($data['password']),
-        ]);
+    const emitted = wrapper.emitted('add-task')//on recupere tout les evenements nommés add-task envoyés par TaskForm
+    expect(emitted).toBeTruthy()//verif que l'event a eu lieu
 
-        $user->assignRole($data['role']); 
+    expect(emitted[0][0]).toEqual({//pareil que expect(payload).toEqual({})
+      nom: 'junior',
+      task: 'Faire le rapport',
+      date: '2025-01-01',
+      done: false
+    })
+  })
 
-        return $user->load('roles');
-    }
 
-    public function updateUser(User $user, array $data): User {
-        $this->ensureNotLastSuperAdmin($user);
 
-        $user->update([
-            'name' => $data['name'],
-            'email' => $data['email'], 
-        ]);
+  it('réinitialise après add réussi', async () => {
+    const wrapper = mount(TaskForm, {
+      props: { mode: 'add' }
+    })
 
-        $user->syncRoles([$data['role']]);
+    const inputs = wrapper.findAll('.q-field__native')
+    await inputs[0].setValue('junior')
+    await inputs[1].setValue('Coder')
+    await inputs[2].setValue('2025-02-02')
 
-        return $user->load('roles');
-    }
+    await wrapper.find('form').trigger('submit.prevent')
+    await nextTick()
 
-    public function deleteUser(User $user): void {
-        $this->ensureNotLastSuperAdmin($user);
-        $user->delete();
-    }
+    const updatedInputs = wrapper.findAll('input')
+    expect(updatedInputs[0].element.value).toBe('')
+    expect(updatedInputs[1].element.value).toBe('')
+    expect(updatedInputs[2].element.value).toBe('')
+  })
 
-    /* 
-    Roles
-    */
+  it('update-task en mode edit', async () => {
+    const wrapper = mount(TaskForm, {
+      props: {
+        mode: 'edit',//TaskForm en mode edit
+        initialNom: 'Charlie',
+        initialTask: 'Relire',
+        initialDate: '2025-03-03',
+        initialDone: true,
+        id: 42
+      }
+    })
 
-    public function listRoles()
-    {
-        return Role::with('permissions')
-            ->select('id','name')
-            ->orderBy('name')
-            ->get();
-    }
+    const inputs = wrapper.findAll('input')
+    console.log(inputs[0])
+    await inputs[0].setValue('Charlie Modifié')
+    await inputs[1].setValue('Relire encore')
+    await inputs[2].setValue('2025-03-10')
 
-    public function updateUserRole(User $user, string $role): User
-    {
-        $this->ensureNotLastSuperAdmin($user);
+    await wrapper.find('form').trigger('submit.prevent')
+    await nextTick()
 
-        $user->syncRoles([$role]);
+    const emitted = wrapper.emitted('update-task')
+    expect(emitted).toBeTruthy()
 
-        return $user->load('roles');
-    }
+    expect(emitted[0][0]).toEqual({
+      nom: 'Charlie Modifié',
+      task: 'Relire encore',
+      date: '2025-03-10',
+      done: true,
+      id: 42
+    })
+  })
 
-    public function createRole(array $data): Role
-    {
-        $role = Role::create([
-            'name' => $data['name'],
-            'guard_name' => 'web',
-        ]);
+  it('$q.notify si succès', async () => {
+    const wrapper = mount(TaskForm, { props: { mode: 'add' } })
 
-        $permissions = array_unique([
-            'create tasks',
-            ...($data['permissions'] ?? []),
-        ]);
+    const notifySpy = vi.spyOn(wrapper.vm.$q, 'notify')
 
-        $role->syncPermissions($permissions);
+    const inputs = wrapper.findAll('.q-field__native')
 
-        return $role->load('permissions');
-    }
+    await inputs[0].setValue('David')
+    await inputs[1].setValue('Tester')
+    await inputs[2].setValue('2025-04-04')
 
-    public function updateRolePermissions(Role $role, array $data): Role
-    {
-        $permissions = array_unique([
-            'create tasks',
-            ...$data['permissions'],
-        ]);
+    await wrapper.find('form').trigger('submit.prevent')
+    await nextTick()
 
-        $role->syncPermissions($permissions);
+    expect(notifySpy).toHaveBeenCalled()
+  })
+})
 
-        return $role->load('permissions');
-    }
 
-    public function deleteRole(Role $role): void
-    {
-        if ($role->name === 'super-admin') {
-            throw new Exception('Impossible de supprimer le rôle super-admin.');
-        }
+ ❯ src/components/TaskForm.vitest.test.js (5) 676ms
+   ❯ TaskForm (5) 673ms
+     ✓ affichage en mode add 451ms
+     × add-task en mode add
+     × réinitialise après add réussi
+     × update-task en mode edit
+     × $q.notify si succès
 
-        $role->delete();
-    }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/components/TaskForm.vitest.test.js > TaskForm > add-task en mode add
+AssertionError: expected undefined to be truthy
 
-    /* 
-      Permissions
-    */
+- Expected:
+undefined
 
-    public function listPermissions()
-    {
-        return Permission::select('id', 'name')->get();
-    }
-}
++ Received:
+false
+
+ ❯ src/components/TaskForm.vitest.test.js:36:21
+     34| 
+     35|     const emitted = wrapper.emitted('add-task')//on recupere tout les evenements nommés add-task envoyés par TaskForm
+     36|     expect(emitted).toBeTruthy()//verif que l'event a eu lieu
+       |                     ^
+     37| 
+     38|     expect(emitted[0][0]).toEqual({//pareil que expect(payload).toEqual({})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+ FAIL  src/components/TaskForm.vitest.test.js > TaskForm > réinitialise après add réussi
+AssertionError: expected 'junior' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ junior
+
+ ❯ src/components/TaskForm.vitest.test.js:62:44
+     60| 
+     61|     const updatedInputs = wrapper.findAll('input')
+     62|     expect(updatedInputs[0].element.value).toBe('')
+       |                                            ^
+     63|     expect(updatedInputs[1].element.value).toBe('')
+     64|     expect(updatedInputs[2].element.value).toBe('')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+ FAIL  src/components/TaskForm.vitest.test.js > TaskForm > update-task en mode edit
+AssertionError: expected undefined to be truthy
+
+- Expected:
+undefined
+
++ Received:
+false
+
+ ❯ src/components/TaskForm.vitest.test.js:89:21
+     87| 
+     88|     const emitted = wrapper.emitted('update-task')
+     89|     expect(emitted).toBeTruthy()
+       |                     ^
+     90| 
+     91|     expect(emitted[0][0]).toEqual({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+ FAIL  src/components/TaskForm.vitest.test.js > TaskForm > $q.notify si succès
+AssertionError: expected "spy" to be called at least once
+ ❯ src/components/TaskForm.vitest.test.js:114:23
+    112|     await nextTick()
+    113| 
+    114|     expect(notifySpy).toHaveBeenCalled()
+       |                       ^
+    115|   })
+    116| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+ Test Files  1 failed (1)
+      Tests  4 failed | 1 passed (5)
+   Start at  15:59:35
+   Duration  9.48s
+
+
+ FAIL  Tests failed. Watching for file changes...
+       press h to show help, press q to quit
+
