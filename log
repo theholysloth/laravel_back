@@ -20,20 +20,46 @@ describe('TaskForm', () => {
 
   it('add-task en mode add', async () => {
     const wrapper = mount(TaskForm, {
-      props: { mode: 'add' }
+      props: { mode: 'add' },
+      global: {
+    mocks: {
+      $q: {
+        notify: vi.fn(),
+        platform: {
+          has: {
+            touch: false
+          }
+        }
+      }
+    }
+  }
     })
     
 
     const inputs = wrapper.findAll('.q-field__native')//on recupere les champs du formulaire
+    console.log("Inputs trouvés :", inputs.length)
+
+    if (inputs.length === 0) {
+      console.log("Aucun input trouvé:STOP")
+      return
+    }
+
     await inputs[0].setValue('junior')
     await inputs[1].setValue('Faire le rapport')
     await inputs[2].setValue('2025-01-01')
+    console.log("Valeurs après setValue :")
+    console.log("nom =", inputs[0].element.value)
+    console.log("task =", inputs[1].element.value)
+    console.log("date =", inputs[2].element.value)
 
     await wrapper.find('form').trigger('submit.prevent')//on envoie 
     await nextTick()
+    console.log("Events émis :", wrapper.emitted())
 
     const emitted = wrapper.emitted('add-task')//on recupere tout les evenements nommés add-task envoyés par TaskForm
+    console.log("add-task =", emitted)
     expect(emitted).toBeTruthy()//verif que l'event a eu lieu
+    
 
     expect(emitted[0][0]).toEqual({//pareil que expect(payload).toEqual({})
       nom: 'junior',
@@ -47,7 +73,19 @@ describe('TaskForm', () => {
 
   it('réinitialise après add réussi', async () => {
     const wrapper = mount(TaskForm, {
-      props: { mode: 'add' }
+      props: { mode: 'add' },
+      global: {
+    mocks: {
+      $q: {
+        notify: vi.fn(),
+        platform: {
+          has: {
+            touch: false
+          }
+        }
+      }
+    }
+  }
     })
 
     const inputs = wrapper.findAll('.q-field__native')
@@ -73,11 +111,23 @@ describe('TaskForm', () => {
         initialDate: '2025-03-03',
         initialDone: true,
         id: 42
+      },
+      global: {
+    mocks: {
+      $q: {
+        notify: vi.fn(),
+        platform: {
+          has: {
+            touch: false
+          }
+        }
       }
+    }
+  }
     })
 
     const inputs = wrapper.findAll('input')
-    console.log(inputs[0])
+    //console.log(inputs[0])
     await inputs[0].setValue('Charlie Modifié')
     await inputs[1].setValue('Relire encore')
     await inputs[2].setValue('2025-03-10')
@@ -98,7 +148,20 @@ describe('TaskForm', () => {
   })
 
   it('$q.notify si succès', async () => {
-    const wrapper = mount(TaskForm, { props: { mode: 'add' } })
+    const wrapper = mount(TaskForm, { props: { mode: 'add' },
+    global: {
+    mocks: {
+      $q: {
+        notify: vi.fn(),
+        platform: {
+          has: {
+            touch: false
+          }
+        }
+      }
+    }
+  }
+ })
 
     const notifySpy = vi.spyOn(wrapper.vm.$q, 'notify')
 
@@ -116,9 +179,25 @@ describe('TaskForm', () => {
 })
 
 
- ❯ src/components/TaskForm.vitest.test.js (5) 676ms
-   ❯ TaskForm (5) 673ms
-     ✓ affichage en mode add 451ms
+src/components/TaskForm.vitest.test.js x9
+
+ · src/components/TaskForm.vitest.test.js (5)
+   · TaskForm (5)
+stdout | src/components/TaskForm.vitest.test.js > TaskForm > add-task en mode add
+Inputs trouvés : 3
+Valeurs après setValue :
+nom = junior
+task = Faire le rapport
+date = 2025-01-01
+Events émis : {
+  input: [ [ [Event] ], [ [Event] ], [ [Event] ] ],
+  change: [ [ [Event] ], [ [Event] ], [ [Event] ] ]
+}
+add-task = undefined
+
+ ❯ src/components/TaskForm.vitest.test.js (5) 493ms
+   ❯ TaskForm (5) 492ms
+     ✓ affichage en mode add 327ms
      × add-task en mode add
      × réinitialise après add réussi
      × update-task en mode edit
@@ -134,13 +213,13 @@ undefined
 + Received:
 false
 
- ❯ src/components/TaskForm.vitest.test.js:36:21
-     34| 
-     35|     const emitted = wrapper.emitted('add-task')//on recupere tout les evenements nommés add-task envoyés par TaskForm
-     36|     expect(emitted).toBeTruthy()//verif que l'event a eu lieu
+ ❯ src/components/TaskForm.vitest.test.js:61:21
+     59|     const emitted = wrapper.emitted('add-task')//on recupere tout les evenements nommés add-task envoyés par TaskForm
+     60|     console.log("add-task =", emitted)
+     61|     expect(emitted).toBeTruthy()//verif que l'event a eu lieu
        |                     ^
-     37| 
-     38|     expect(emitted[0][0]).toEqual({//pareil que expect(payload).toEqual({})
+     62| 
+     63| 
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
  FAIL  src/components/TaskForm.vitest.test.js > TaskForm > réinitialise après add réussi
@@ -151,13 +230,13 @@ AssertionError: expected 'junior' to be '' // Object.is equality
 
 + junior
 
- ❯ src/components/TaskForm.vitest.test.js:62:44
-     60| 
-     61|     const updatedInputs = wrapper.findAll('input')
-     62|     expect(updatedInputs[0].element.value).toBe('')
+ ❯ src/components/TaskForm.vitest.test.js:100:44
+     98| 
+     99|     const updatedInputs = wrapper.findAll('input')
+    100|     expect(updatedInputs[0].element.value).toBe('')
        |                                            ^
-     63|     expect(updatedInputs[1].element.value).toBe('')
-     64|     expect(updatedInputs[2].element.value).toBe('')
+    101|     expect(updatedInputs[1].element.value).toBe('')
+    102|     expect(updatedInputs[2].element.value).toBe('')
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
  FAIL  src/components/TaskForm.vitest.test.js > TaskForm > update-task en mode edit
@@ -169,32 +248,27 @@ undefined
 + Received:
 false
 
- ❯ src/components/TaskForm.vitest.test.js:89:21
-     87| 
-     88|     const emitted = wrapper.emitted('update-task')
-     89|     expect(emitted).toBeTruthy()
+ ❯ src/components/TaskForm.vitest.test.js:139:21
+    137| 
+    138|     const emitted = wrapper.emitted('update-task')
+    139|     expect(emitted).toBeTruthy()
        |                     ^
-     90| 
-     91|     expect(emitted[0][0]).toEqual({
+    140| 
+    141|     expect(emitted[0][0]).toEqual({
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
  FAIL  src/components/TaskForm.vitest.test.js > TaskForm > $q.notify si succès
 AssertionError: expected "spy" to be called at least once
- ❯ src/components/TaskForm.vitest.test.js:114:23
-    112|     await nextTick()
-    113| 
-    114|     expect(notifySpy).toHaveBeenCalled()
+ ❯ src/components/TaskForm.vitest.test.js:177:23
+    175|     await nextTick()
+    176| 
+    177|     expect(notifySpy).toHaveBeenCalled()
        |                       ^
-    115|   })
-    116| })
+    178|   })
+    179| })
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
  Test Files  1 failed (1)
       Tests  4 failed | 1 passed (5)
-   Start at  15:59:35
-   Duration  9.48s
-
-
- FAIL  Tests failed. Watching for file changes...
-       press h to show help, press q to quit
-
+   Start at  08:26:51
+   Duration  9.35s
