@@ -26,7 +26,7 @@ class UpdateUserRoleRequest extends FormRequest
         return [
             'role' => ['required', 
                         'string', 
-                        Rule::in(['user', 'admin','super-admin'])
+                        Rule::exists('roles', 'name'),
                 ],
             //
         ];

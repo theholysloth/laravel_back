@@ -24,6 +24,6 @@ class Task extends Model
     ];
 
     public function user(){//grace à ces realtions on pourra juste faire task->user() pour avoir l'user chargé de ces taches 
-        return $this->belongsTo(Task::class);
+        return $this->belongsTo(User::class);
     }
 }

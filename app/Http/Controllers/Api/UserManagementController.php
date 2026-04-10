@@ -3,199 +3,141 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Services\UserManagementService;
+use Illuminate\Http\Request;
+use App\Http\Requests\CreateUserByAdminRequest;
+use App\Http\Requests\UpdateUserByAdminRequest;
 use App\Http\Requests\UpdateUserRoleRequest;
 use Spatie\Permission\Models\Role;
-use App\Http\Requests\CreateUserByAdminRequest;
-use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\UpdateUserByAdminRequest;
-use Spatie\Permission\Models\Permission;
-
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 
 class UserManagementController extends Controller
 {
-    //
-    use AuthorizesRequests; 
-    public function index(){
-        $this->authorize('viewAny',User::class);//on doit definir viewAny qui sera une policy qui verifie la permission 'view users'
-        $users = User::with('roles')->latest()->get();//recuperer Users+roles
 
-        return response()->json([
-            'users' => $users
-        ]);
-    }
+    use AuthorizesRequests;
+    
+    public function __construct(private UserManagementService $service) {}
 
-    public function updateRole(UpdateUserRoleRequest $request, User $user)//role d'un user
+    /*Users*/
+
+    public function index()
     {
-        $this->authorize('assignRole', $user);
-
-        $validated = $request->validated();
-        $newRole = $validated['role'];
-
-        $isCurrentlySuperAdmin = $user->hasRole('super-admin');
-        $isBecomingSuperAdmin = $newRole === 'super-admin';
-
-        // Cas : on retire le rôle super-admin à un utilisateur
-        if ($isCurrentlySuperAdmin && ! $isBecomingSuperAdmin) {
-            $superAdminCount = User::role('super-admin')->count();
-
-            if ($superAdminCount <= 1) {
-                return response()->json([
-                    'message' => 'Impossible de retirer le dernier super-admin.'
-                ], 422);
-            }
-        }
-
-        $user->syncRoles([$newRole]);
+        $this->authorize('viewAny', User::class);
 
         return response()->json([
-            'message' => 'Rôle mis à jour avec succès',
-            'user' => $user->load('roles'),
+            'users' => $this->service->listUsers()
         ]);
     }
 
-    public function roles(){
-        $this->authorize('viewAny',User::class);
-        $roles = Role::with('permissions')   
-                ->select('id','name')
-                ->orderBy('name')
-                ->get();
-        return response()->json([
-            'roles' => $roles
-        ]);
-    }
-
-    public function store(CreateUserByAdminRequest $request){
+    public function store(CreateUserByAdminRequest $request)
+    {
         $this->authorize('create', User::class);
 
-        $validated = $request->validated();
-        $user = User::create([
-            'name' =>$validated['name'], 
-            'email' =>$validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        $user->assignRole($validated['role']);
-
+        $user = $this->service->createUser($request->validated());
 
         return response()->json([
             'message' => 'Utilisateur créé!',
-            'user' => $user->load('roles'), 
-        ],201);
+            'user' => $user,
+        ], 201);
     }
 
-    public function update(UpdateUserByAdminRequest $request, User $user){
+    public function update(UpdateUserByAdminRequest $request, User $user)
+    {
         $this->authorize('assignRole', $user);
 
-        $validated = $request->validated();
-        $user->update([
-            'name' =>$validated['name'], 
-            'email' =>$validated['email'],
-        ]);
-
-        $user->syncRoles([$validated['role']]);
-
+        $updated = $this->service->updateUser($user, $request->validated());
 
         return response()->json([
             'message' => 'Utilisateur modifié!',
-            'user' => $user->load('roles'), 
-        ],200);
+            'user' => $updated,
+        ]);
     }
 
-    public function destroy(User $user){
+    public function destroy(User $user)
+    {
         $this->authorize('assignRole', $user);
 
-        if($user->hasRole('super-admin')){
-            $count = User::role('super-admin')->count();
-
-            if($count <= 1 ){
-                return response()->json([
-                    'message' => 'Impossible de supprimer le dernier super-admin'
-                ],422);
-            }
-        }
-        $user->delete();
+        $this->service->deleteUser($user);
 
         return response()->json([
             'message' => 'Utilisateur supprimé!',
         ]);
     }
 
-    public function permissions(){
-        $this->authorize('assignRole', User::class);
+    /*Roles*/
+
+    public function roles()
+    {
+        $this->authorize('viewAny', User::class);
+
         return response()->json([
-            'permissions' => Permission::select('id', 'name')->get()
+            'roles' => $this->service->listRoles()
         ]);
     }
 
+    public function updateRole(UpdateUserRoleRequest $request, User $user)
+    {
+        $this->authorize('assignRole', $user);
 
-    public function storeRole(Request $request){
-        $this->authorize('assignRole', User::class);
-        $defaultPermission = 'create tasks';
-
-        $validated = $request->validate([
-            'name'=>['required', 'string', 'unique:roles,name'], 
-            'permissions' => ['required','array' , 'min:1']
-        ]);
-        $role = Role::create([
-            'name' =>$validated['name'], 
-            'guard_name' => 'web',
-        ]);
-
-        $permissions = array_unique([
-            $defaultPermission,
-            ...$validated['permissions']
-        ]);
-
-        $role->syncPermissions($permissions);
-
-
-        return response()->json([
-            'message' => 'Role créé!',
-            'role' => $role->load('permissions'), 
-        ],201);
-    }
-
-    public function updateRolePermissions(Request $request, Role $role){
-        $this->authorize('assignRole', User::class);
-
-        $validated = $request->validate([
-            'name'=> ['required', 'string'], 
-            'permissions' => ['required','array' , 'min:1']
-        ]);
-
-        $permissions = array_unique([
-        'create tasks',
-        ...$validated['permissions']
-    ]);
-
-$role->syncPermissions($permissions);
-
-
+        $updated = $this->service->updateUserRole($user, $request->validated()['role']);
 
         return response()->json([
             'message' => 'Rôle mis à jour avec succès',
-            'role' => $role->load('permissions'),
+            'user' => $updated,
         ]);
     }
 
-    public function deleteRole(Role $role){
+    public function storeRole(Request $request)
+    {
         $this->authorize('assignRole', User::class);
 
-        if($role->name === 'super-admin'){
-            return response()->json([
-                    'message' => 'Impossible de supprimer le role de super-admin'
-                ],422);
-        }
-        $role->delete();
+        $role = $this->service->createRole($request->validate([
+            'name' => ['required', 'string', 'unique:roles,name'],
+            'permissions' => ['required', 'array', 'min:1'],
+        ]));
+
+        return response()->json([
+            'message' => 'Role créé!',
+            'role' => $role,
+        ], 201);
+    }
+
+    public function updateRolePermissions(Request $request, Role $role)
+    {
+        $this->authorize('assignRole', User::class);
+
+        $updated = $this->service->updateRolePermissions($role, $request->validate([
+            'name' => ['required', 'string'],
+            'permissions' => ['required', 'array', 'min:1'],
+        ]));
+
+        return response()->json([
+            'message' => 'Rôle mis à jour avec succès',
+            'role' => $updated,
+        ]);
+    }
+
+    public function deleteRole(Role $role)
+    {
+        $this->authorize('assignRole', User::class);
+
+        $this->service->deleteRole($role);
 
         return response()->json([
             'message' => 'Role supprimé!',
         ]);
     }
 
+    /*Permissions*/
 
+    public function permissions()
+    {
+        $this->authorize('assignRole', User::class);
+
+        return response()->json([
+            'permissions' => $this->service->listPermissions()
+        ]);
+    }
 }

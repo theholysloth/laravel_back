@@ -15,7 +15,7 @@ class UserPolicy
         return $user->can('view users');
     }
 
-    public function AssignRole(User $user, User $target_user){
+    public function assignRole(User $user, $target_user = null): bool{
         return $user->hasRole('super-admin');
     }
 
@@ -32,7 +32,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('super-admin');
     }
 
     /**

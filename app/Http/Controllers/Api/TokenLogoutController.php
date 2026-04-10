@@ -12,7 +12,7 @@ class TokenLogoutController extends Controller
         $request->user()->currentAccessToken()->delete();//supprimer le token
         
         return response()->json([
-            'message' => 'deconnexion reussie!',
+            'message' => 'Déconnexion réussie!',
         ]);
     }
 }
