@@ -1,274 +1,276 @@
-import { mount } from '@vue/test-utils' //mount permet de monter le composant complet dans l'env test
-import { describe, it, expect, vi } from 'vitest'
-import TaskForm from './TaskForm.vue'//etant donné qu'on teste TaskForm , on l'import
-//import { useQuasar } from 'quasar'
-import { nextTick } from 'vue' //nextTick permet d'attendre la maj du dom apres une action
+// Configuration for your app
+// https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
-describe('TaskForm', () => {
-    //
-  it('affichage en mode add', () => {
-    const wrapper = mount(TaskForm, {
-      props: { mode: 'add' }//on cree des props qui sont utile pour le composant 
-    })
+import { defineConfig } from '#q-app/wrappers'
 
-    expect(wrapper.find('input')).toBeTruthy()//wrapper permet d'interragir avec TaskForm car le composant y est stocké
-    expect(wrapper.find('button').text()).toContain('Ajouter')//le button en mode add
-  })
+export default defineConfig((/* ctx */) => {
+  return {
+    // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
+    // preFetch: true,
 
+    // app boot file (/src/boot)
+    // --> boot files are part of "main.js"
+    // https://v2.quasar.dev/quasar-cli-vite/boot-files
+    boot: ['pinia','axios','directives'],
 
+    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
+    css: ['app.scss'],
 
+    // https://github.com/quasarframework/quasar/tree/dev/extras
+    extras: [
+      // 'ionicons-v4',
+      // 'mdi-v7',
+      // 'fontawesome-v6',
+      // 'eva-icons',
+      // 'themify',
+      // 'line-awesome',
+      // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
 
-  it('add-task en mode add', async () => {
-    const wrapper = mount(TaskForm, {
-      props: { mode: 'add' },
-      global: {
-    mocks: {
-      $q: {
-        notify: vi.fn(),
-        platform: {
-          has: {
-            touch: false
-          }
-        }
-      }
-    }
-  }
-    })
-    
+      'roboto-font', // optional, you are not bound to it
+      'material-icons', // optional, you are not bound to it
+    ],
 
-    const inputs = wrapper.findAll('.q-field__native')//on recupere les champs du formulaire
-    console.log("Inputs trouvés :", inputs.length)
-
-    if (inputs.length === 0) {
-      console.log("Aucun input trouvé:STOP")
-      return
-    }
-
-    await inputs[0].setValue('junior')
-    await inputs[1].setValue('Faire le rapport')
-    await inputs[2].setValue('2025-01-01')
-    console.log("Valeurs après setValue :")
-    console.log("nom =", inputs[0].element.value)
-    console.log("task =", inputs[1].element.value)
-    console.log("date =", inputs[2].element.value)
-
-    await wrapper.find('form').trigger('submit.prevent')//on envoie 
-    await nextTick()
-    console.log("Events émis :", wrapper.emitted())
-
-    const emitted = wrapper.emitted('add-task')//on recupere tout les evenements nommés add-task envoyés par TaskForm
-    console.log("add-task =", emitted)
-    expect(emitted).toBeTruthy()//verif que l'event a eu lieu
-    
-
-    expect(emitted[0][0]).toEqual({//pareil que expect(payload).toEqual({})
-      nom: 'junior',
-      task: 'Faire le rapport',
-      date: '2025-01-01',
-      done: false
-    })
-  })
-
-
-
-  it('réinitialise après add réussi', async () => {
-    const wrapper = mount(TaskForm, {
-      props: { mode: 'add' },
-      global: {
-    mocks: {
-      $q: {
-        notify: vi.fn(),
-        platform: {
-          has: {
-            touch: false
-          }
-        }
-      }
-    }
-  }
-    })
-
-    const inputs = wrapper.findAll('.q-field__native')
-    await inputs[0].setValue('junior')
-    await inputs[1].setValue('Coder')
-    await inputs[2].setValue('2025-02-02')
-
-    await wrapper.find('form').trigger('submit.prevent')
-    await nextTick()
-
-    const updatedInputs = wrapper.findAll('input')
-    expect(updatedInputs[0].element.value).toBe('')
-    expect(updatedInputs[1].element.value).toBe('')
-    expect(updatedInputs[2].element.value).toBe('')
-  })
-
-  it('update-task en mode edit', async () => {
-    const wrapper = mount(TaskForm, {
-      props: {
-        mode: 'edit',//TaskForm en mode edit
-        initialNom: 'Charlie',
-        initialTask: 'Relire',
-        initialDate: '2025-03-03',
-        initialDone: true,
-        id: 42
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
+    build: {
+      target: {
+        browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
+        node: 'node20',
       },
-      global: {
-    mocks: {
-      $q: {
-        notify: vi.fn(),
-        platform: {
-          has: {
-            touch: false
-          }
-        }
-      }
-    }
+
+      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      // vueRouterBase,
+      // vueDevtools,
+      // vueOptionsAPI: false,
+
+      // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
+
+      // publicPath: '/',
+      // analyze: true,
+      // env: {},
+      // rawDefine: {}
+      // ignorePublicFolder: true,
+      // minify: false,
+      // polyfillModulePreload: true,
+      // distDir
+
+      // extendViteConf (viteConf) {},
+      // viteVuePluginOptions: {},
+
+      vitePlugins: [
+        [
+          'vite-plugin-checker',
+          {
+            eslint: {
+              lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{js,mjs,cjs,vue}"',
+              useFlatConfig: true,
+            },
+          },
+          { server: false },
+        ],
+      ],
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
+    devServer: {
+      // https: true,
+      open: true, // opens browser window automatically
+    },
+
+    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
+    framework: {
+      config: {},
+
+      // iconSet: 'material-icons', // Quasar icon set
+      // lang: 'en-US', // Quasar language pack
+
+      // For special cases outside of where the auto-import strategy can have an impact
+      // (like functional components as one of the examples),
+      // you can manually specify Quasar components/directives to be available everywhere:
+      //
+      // components: [],
+      // directives: [],
+
+      // Quasar plugins
+      plugins: ['Notify', 'Dialog'],
+    },
+
+    // animations: 'all', // --- includes all animations
+    // https://v2.quasar.dev/options/animations
+    animations: [],
+
+    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#sourcefiles
+     sourceFiles: {
+    //   rootComponent: 'src/App.vue',
+      router: 'src/router/index',
+      //store: 'src/store/index',
+    //   pwaRegisterServiceWorker: 'src-pwa/register-service-worker',
+    //   pwaServiceWorker: 'src-pwa/custom-service-worker',
+    //   pwaManifestFile: 'src-pwa/manifest.json',
+    //   electronMain: 'src-electron/electron-main',
+    //   electronPreload: 'src-electron/electron-preload'
+    //   bexManifestFile: 'src-bex/manifest.json
+    },
+
+    // https://v2.quasar.dev/quasar-cli-vite/developing-ssr/configuring-ssr
+    ssr: {
+      prodPort: 3000, // The default port that the production server should use
+      // (gets superseded if process.env.PORT is specified at runtime)
+
+      middlewares: [
+        'render', // keep this as last one
+      ],
+
+      // extendPackageJson (json) {},
+      // extendSSRWebserverConf (esbuildConf) {},
+
+      // manualStoreSerialization: true,
+      // manualStoreSsrContextInjection: true,
+      // manualStoreHydration: true,
+      // manualPostHydrationTrigger: true,
+
+      pwa: false,
+      // pwaOfflineHtmlFilename: 'offline.html', // do NOT use index.html as name!
+
+      // pwaExtendGenerateSWOptions (cfg) {},
+      // pwaExtendInjectManifestOptions (cfg) {}
+    },
+
+    // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
+    pwa: {
+      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
+      // swFilename: 'sw.js',
+      // manifestFilename: 'manifest.json',
+      // extendManifestJson (json) {},
+      // useCredentialsForManifestTag: true,
+      // injectPwaMetaTags: false,
+      // extendPWACustomSWConf (esbuildConf) {},
+      // extendGenerateSWOptions (cfg) {},
+      // extendInjectManifestOptions (cfg) {}
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-cordova-apps/configuring-cordova
+    cordova: {
+      // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-capacitor-apps/configuring-capacitor
+    capacitor: {
+      hideSplashscreen: true,
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/configuring-electron
+    electron: {
+      // extendElectronMainConf (esbuildConf) {},
+      // extendElectronPreloadConf (esbuildConf) {},
+
+      // extendPackageJson (json) {},
+
+      // Electron preload scripts (if any) from /src-electron, WITHOUT file extension
+      preloadScripts: ['electron-preload'],
+
+      // specify the debugging port to use for the Electron app when running in development mode
+      inspectPort: 5858,
+
+      bundler: 'packager', // 'packager' or 'builder'
+
+      packager: {
+        // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
+        // OS X / Mac App Store
+        // appBundleId: '',
+        // appCategoryType: '',
+        // osxSign: '',
+        // protocol: 'myapp://path',
+        // Windows only
+        // win32metadata: { ... }
+      },
+
+      builder: {
+        // https://www.electron.build/configuration
+
+        appId: 'todolist2',
+      },
+    },
+
+    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
+    bex: {
+      // extendBexScriptsConf (esbuildConf) {},
+      // extendBexManifestJson (json) {},
+
+      /**
+       * The list of extra scripts (js/ts) not in your bex manifest that you want to
+       * compile and use in your browser extension. Maybe dynamic use them?
+       *
+       * Each entry in the list should be a relative filename to /src-bex/
+       *
+       * @example [ 'my-script.ts', 'sub-folder/my-other-script.js' ]
+       */
+      extraScripts: [],
+    },
   }
-    })
-
-    const inputs = wrapper.findAll('input')
-    //console.log(inputs[0])
-    await inputs[0].setValue('Charlie Modifié')
-    await inputs[1].setValue('Relire encore')
-    await inputs[2].setValue('2025-03-10')
-
-    await wrapper.find('form').trigger('submit.prevent')
-    await nextTick()
-
-    const emitted = wrapper.emitted('update-task')
-    expect(emitted).toBeTruthy()
-
-    expect(emitted[0][0]).toEqual({
-      nom: 'Charlie Modifié',
-      task: 'Relire encore',
-      date: '2025-03-10',
-      done: true,
-      id: 42
-    })
-  })
-
-  it('$q.notify si succès', async () => {
-    const wrapper = mount(TaskForm, { props: { mode: 'add' },
-    global: {
-    mocks: {
-      $q: {
-        notify: vi.fn(),
-        platform: {
-          has: {
-            touch: false
-          }
-        }
-      }
-    }
-  }
- })
-
-    const notifySpy = vi.spyOn(wrapper.vm.$q, 'notify')
-
-    const inputs = wrapper.findAll('.q-field__native')
-
-    await inputs[0].setValue('David')
-    await inputs[1].setValue('Tester')
-    await inputs[2].setValue('2025-04-04')
-
-    await wrapper.find('form').trigger('submit.prevent')
-    await nextTick()
-
-    expect(notifySpy).toHaveBeenCalled()
-  })
 })
+npx vitest test
 
+ DEV  v0.34.6 /app/todoList2
 
-src/components/TaskForm.vitest.test.js x9
-
- · src/components/TaskForm.vitest.test.js (5)
-   · TaskForm (5)
+ · src/components/TaskForm.vitest.test.js (4)
+(node:857) Warning: `--localstorage-file` was provided without a valid path
 stdout | src/components/TaskForm.vitest.test.js > TaskForm > add-task en mode add
 Inputs trouvés : 3
 Valeurs après setValue :
 nom = junior
 task = Faire le rapport
 date = 2025-01-01
+
+stdout | src/components/TaskForm.vitest.test.js > TaskForm > add-task en mode add
 Events émis : {
   input: [ [ [Event] ], [ [Event] ], [ [Event] ] ],
-  change: [ [ [Event] ], [ [Event] ], [ [Event] ] ]
+  change: [ [ [Event] ], [ [Event] ], [ [Event] ] ],
+  'add-task': [ [ [Object] ] ]
 }
-add-task = undefined
+add-task = [
+  [
+    {
+      nom: 'junior',
+      task: 'Faire le rapport',
+      date: '2025-01-01',
+      done: false
+    }
+  ]
+]
 
- ❯ src/components/TaskForm.vitest.test.js (5) 493ms
-   ❯ TaskForm (5) 492ms
-     ✓ affichage en mode add 327ms
-     × add-task en mode add
-     × réinitialise après add réussi
-     × update-task en mode edit
-     × $q.notify si succès
+ ✓ src/components/TaskForm.vitest.test.js (4) 579ms
+(node:857) Warning: `--localstorage-file` was provided without a valid path
+stderr | test/vitest/__tests__/NotifyComponent.test.js > notify example > should call notify on click
+[Vue warn]: Plugin has already been applied to target app.
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
- FAIL  src/components/TaskForm.vitest.test.js > TaskForm > add-task en mode add
-AssertionError: expected undefined to be truthy
+stderr | test/vitest/__tests__/ExampleComponent.test.js > example Component > should mount component with todos
+[Vue warn]: Plugin has already been applied to target app.
 
-- Expected:
-undefined
+stderr | test/vitest/__tests__/ExampleComponent.test.js > example Component > should mount component without todos
+[Vue warn]: Plugin has already been applied to target app.
 
-+ Received:
-false
+ ✓ src/components/TaskForm.vitest.test.js (4) 579ms
+ ❯ src/components/TaskList.vitest.test.js (0)
+ ✓ test/vitest/__tests__/NotifyComponent.test.js (1)
+ ✓ test/vitest/__tests__/ExampleComponent.test.js (2)
 
- ❯ src/components/TaskForm.vitest.test.js:61:21
-     59|     const emitted = wrapper.emitted('add-task')//on recupere tout les evenements nommés add-task envoyés par TaskForm
-     60|     console.log("add-task =", emitted)
-     61|     expect(emitted).toBeTruthy()//verif que l'event a eu lieu
-       |                     ^
-     62| 
-     63| 
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/components/TaskList.vitest.test.js [ src/components/TaskList.vitest.test.js ]
+Error: Failed to resolve import "src/stores/tasks" from "src/components/TaskList.vue". Does the file exist?
+ ❯ TransformPluginContext._formatError node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16
+ ❯ normalizeUrl node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23
+ ❯ async file:/app/todoList2/node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+ ❯ TransformPluginContext.transform node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7
+ ❯ PluginContainer.transform node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18
+ ❯ loadAndTransform node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
- FAIL  src/components/TaskForm.vitest.test.js > TaskForm > réinitialise après add réussi
-AssertionError: expected 'junior' to be '' // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+ Test Files  1 failed | 3 passed (4)
+      Tests  7 passed (7)
+   Start at  12:30:14
+   Duration  29.94s (transform 735ms, setup 27.52s, collect 960ms, tests 725ms, environment 11.63s, prepare 5.24s)
 
-- Expected
-+ Received
 
-+ junior
-
- ❯ src/components/TaskForm.vitest.test.js:100:44
-     98| 
-     99|     const updatedInputs = wrapper.findAll('input')
-    100|     expect(updatedInputs[0].element.value).toBe('')
-       |                                            ^
-    101|     expect(updatedInputs[1].element.value).toBe('')
-    102|     expect(updatedInputs[2].element.value).toBe('')
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
- FAIL  src/components/TaskForm.vitest.test.js > TaskForm > update-task en mode edit
-AssertionError: expected undefined to be truthy
-
-- Expected:
-undefined
-
-+ Received:
-false
-
- ❯ src/components/TaskForm.vitest.test.js:139:21
-    137| 
-    138|     const emitted = wrapper.emitted('update-task')
-    139|     expect(emitted).toBeTruthy()
-       |                     ^
-    140| 
-    141|     expect(emitted[0][0]).toEqual({
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
- FAIL  src/components/TaskForm.vitest.test.js > TaskForm > $q.notify si succès
-AssertionError: expected "spy" to be called at least once
- ❯ src/components/TaskForm.vitest.test.js:177:23
-    175|     await nextTick()
-    176| 
-    177|     expect(notifySpy).toHaveBeenCalled()
-       |                       ^
-    178|   })
-    179| })
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
- Test Files  1 failed (1)
-      Tests  4 failed | 1 passed (5)
-   Start at  08:26:51
-   Duration  9.35s
+ FAIL  Tests failed. Watching for file changes...
+       press h to show help, press q to quit
