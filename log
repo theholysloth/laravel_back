@@ -1,276 +1,106 @@
-// Configuration for your app
-// https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
+@php artisan vendor:publish --tag=laravel-assets --ansi --force
+   INFO  No publishable resources for tag [laravel-assets].  
+$ php artisan migrate --force
+In Connection.php line 841:
+                                                                               
+  SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo for $DB_HOST f  
+  ailed: Name or service not known (Connection: mysql, Host: $DB_HOST, Port:   
+  $DB_PORT, Database: $DB_DATABASE, SQL: select exists (select 1 from informa  
+  tion_schema.tables where table_schema = schema() and table_name = 'migratio  
+  ns' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)       
+                                                                               
+In Connector.php line 66:
+                                                                               
+  SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo for $DB_HOST f  
+  ailed: Name or service not known                                             
+                                                                               
+In Connector.php line 66:
+                                                                               
+  PDO::__construct(): php_network_getaddresses: getaddrinfo for $DB_HOST fail  
+  ed: Name or service not known                                                
+                                                                               
+Cleaning up project directory and file based variables
+00:03
+ERROR: Job failed: exit code 1
 
-import { defineConfig } from '#q-app/wrappers'
+stages:
+  - install
+  - test
+  - build
 
-export default defineConfig((/* ctx */) => {
-  return {
-    // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
-    // preFetch: true,
+variables:
+  APP_ENV: testing
+  MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+  MYSQL_DATABASE: $MYSQL_DATABASE
+  MYSQL_USER: $MYSQL_USER
 
-    // app boot file (/src/boot)
-    // --> boot files are part of "main.js"
-    // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['pinia','axios','directives'],
+  DB_CONNECTION: mysql
+  DB_HOST: $DB_HOST
+  DB_PORT: $DB_PORT
+  DB_DATABASE: $DB_DATABASE
+  DB_USERNAME: $DB_USERNAME
+  DB_PASSWORD: $DB_PASSWORD
+  COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composer"
 
-    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
-    css: ['app.scss'],
-
-    // https://github.com/quasarframework/quasar/tree/dev/extras
-    extras: [
-      // 'ionicons-v4',
-      // 'mdi-v7',
-      // 'fontawesome-v6',
-      // 'eva-icons',
-      // 'themify',
-      // 'line-awesome',
-      // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
-
-      'roboto-font', // optional, you are not bound to it
-      'material-icons', // optional, you are not bound to it
-    ],
-
-    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
-    build: {
-      target: {
-        browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
-        node: 'node20',
-      },
-
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
-      // vueRouterBase,
-      // vueDevtools,
-      // vueOptionsAPI: false,
-
-      // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
-
-      // publicPath: '/',
-      // analyze: true,
-      // env: {},
-      // rawDefine: {}
-      // ignorePublicFolder: true,
-      // minify: false,
-      // polyfillModulePreload: true,
-      // distDir
-
-      // extendViteConf (viteConf) {},
-      // viteVuePluginOptions: {},
-
-      vitePlugins: [
-        [
-          'vite-plugin-checker',
-          {
-            eslint: {
-              lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{js,mjs,cjs,vue}"',
-              useFlatConfig: true,
-            },
-          },
-          { server: false },
-        ],
-      ],
-    },
-
-    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
-    devServer: {
-      // https: true,
-      open: true, // opens browser window automatically
-    },
-
-    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
-    framework: {
-      config: {},
-
-      // iconSet: 'material-icons', // Quasar icon set
-      // lang: 'en-US', // Quasar language pack
-
-      // For special cases outside of where the auto-import strategy can have an impact
-      // (like functional components as one of the examples),
-      // you can manually specify Quasar components/directives to be available everywhere:
-      //
-      // components: [],
-      // directives: [],
-
-      // Quasar plugins
-      plugins: ['Notify', 'Dialog'],
-    },
-
-    // animations: 'all', // --- includes all animations
-    // https://v2.quasar.dev/options/animations
-    animations: [],
-
-    // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#sourcefiles
-     sourceFiles: {
-    //   rootComponent: 'src/App.vue',
-      router: 'src/router/index',
-      //store: 'src/store/index',
-    //   pwaRegisterServiceWorker: 'src-pwa/register-service-worker',
-    //   pwaServiceWorker: 'src-pwa/custom-service-worker',
-    //   pwaManifestFile: 'src-pwa/manifest.json',
-    //   electronMain: 'src-electron/electron-main',
-    //   electronPreload: 'src-electron/electron-preload'
-    //   bexManifestFile: 'src-bex/manifest.json
-    },
-
-    // https://v2.quasar.dev/quasar-cli-vite/developing-ssr/configuring-ssr
-    ssr: {
-      prodPort: 3000, // The default port that the production server should use
-      // (gets superseded if process.env.PORT is specified at runtime)
-
-      middlewares: [
-        'render', // keep this as last one
-      ],
-
-      // extendPackageJson (json) {},
-      // extendSSRWebserverConf (esbuildConf) {},
-
-      // manualStoreSerialization: true,
-      // manualStoreSsrContextInjection: true,
-      // manualStoreHydration: true,
-      // manualPostHydrationTrigger: true,
-
-      pwa: false,
-      // pwaOfflineHtmlFilename: 'offline.html', // do NOT use index.html as name!
-
-      // pwaExtendGenerateSWOptions (cfg) {},
-      // pwaExtendInjectManifestOptions (cfg) {}
-    },
-
-    // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
-    pwa: {
-      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
-      // swFilename: 'sw.js',
-      // manifestFilename: 'manifest.json',
-      // extendManifestJson (json) {},
-      // useCredentialsForManifestTag: true,
-      // injectPwaMetaTags: false,
-      // extendPWACustomSWConf (esbuildConf) {},
-      // extendGenerateSWOptions (cfg) {},
-      // extendInjectManifestOptions (cfg) {}
-    },
-
-    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-cordova-apps/configuring-cordova
-    cordova: {
-      // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
-    },
-
-    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-capacitor-apps/configuring-capacitor
-    capacitor: {
-      hideSplashscreen: true,
-    },
-
-    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/configuring-electron
-    electron: {
-      // extendElectronMainConf (esbuildConf) {},
-      // extendElectronPreloadConf (esbuildConf) {},
-
-      // extendPackageJson (json) {},
-
-      // Electron preload scripts (if any) from /src-electron, WITHOUT file extension
-      preloadScripts: ['electron-preload'],
-
-      // specify the debugging port to use for the Electron app when running in development mode
-      inspectPort: 5858,
-
-      bundler: 'packager', // 'packager' or 'builder'
-
-      packager: {
-        // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
-        // OS X / Mac App Store
-        // appBundleId: '',
-        // appCategoryType: '',
-        // osxSign: '',
-        // protocol: 'myapp://path',
-        // Windows only
-        // win32metadata: { ... }
-      },
-
-      builder: {
-        // https://www.electron.build/configuration
-
-        appId: 'todolist2',
-      },
-    },
-
-    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
-    bex: {
-      // extendBexScriptsConf (esbuildConf) {},
-      // extendBexManifestJson (json) {},
-
-      /**
-       * The list of extra scripts (js/ts) not in your bex manifest that you want to
-       * compile and use in your browser extension. Maybe dynamic use them?
-       *
-       * Each entry in the list should be a relative filename to /src-bex/
-       *
-       * @example [ 'my-script.ts', 'sub-folder/my-other-script.js' ]
-       */
-      extraScripts: [],
-    },
-  }
-})
-npx vitest test
-
- DEV  v0.34.6 /app/todoList2
-
- · src/components/TaskForm.vitest.test.js (4)
-(node:857) Warning: `--localstorage-file` was provided without a valid path
-stdout | src/components/TaskForm.vitest.test.js > TaskForm > add-task en mode add
-Inputs trouvés : 3
-Valeurs après setValue :
-nom = junior
-task = Faire le rapport
-date = 2025-01-01
-
-stdout | src/components/TaskForm.vitest.test.js > TaskForm > add-task en mode add
-Events émis : {
-  input: [ [ [Event] ], [ [Event] ], [ [Event] ] ],
-  change: [ [ [Event] ], [ [Event] ], [ [Event] ] ],
-  'add-task': [ [ [Object] ] ]
-}
-add-task = [
-  [
-    {
-      nom: 'junior',
-      task: 'Faire le rapport',
-      date: '2025-01-01',
-      done: false
-    }
-  ]
-]
-
- ✓ src/components/TaskForm.vitest.test.js (4) 579ms
-(node:857) Warning: `--localstorage-file` was provided without a valid path
-stderr | test/vitest/__tests__/NotifyComponent.test.js > notify example > should call notify on click
-[Vue warn]: Plugin has already been applied to target app.
-
-stderr | test/vitest/__tests__/ExampleComponent.test.js > example Component > should mount component with todos
-[Vue warn]: Plugin has already been applied to target app.
-
-stderr | test/vitest/__tests__/ExampleComponent.test.js > example Component > should mount component without todos
-[Vue warn]: Plugin has already been applied to target app.
-
- ✓ src/components/TaskForm.vitest.test.js (4) 579ms
- ❯ src/components/TaskList.vitest.test.js (0)
- ✓ test/vitest/__tests__/NotifyComponent.test.js (1)
- ✓ test/vitest/__tests__/ExampleComponent.test.js (2)
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
- FAIL  src/components/TaskList.vitest.test.js [ src/components/TaskList.vitest.test.js ]
-Error: Failed to resolve import "src/stores/tasks" from "src/components/TaskList.vue". Does the file exist?
- ❯ TransformPluginContext._formatError node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41
- ❯ TransformPluginContext.error node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16
- ❯ normalizeUrl node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23
- ❯ async file:/app/todoList2/node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
- ❯ TransformPluginContext.transform node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7
- ❯ PluginContainer.transform node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18
- ❯ loadAndTransform node_modules/vitest/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
- Test Files  1 failed | 3 passed (4)
-      Tests  7 passed (7)
-   Start at  12:30:14
-   Duration  29.94s (transform 735ms, setup 27.52s, collect 960ms, tests 725ms, environment 11.63s, prepare 5.24s)
+# Cache Composer
+cache:
+  paths:
+    - vendor/
+    - .composer/
 
 
- FAIL  Tests failed. Watching for file changes...
-       press h to show help, press q to quit
+install_back:
+  stage: install
+  image: php:8.3
+  services:
+    - name: mysql:8.4
+      alias: db
+  script:
+    - apt-get update && apt-get install -y unzip git libzip-dev libpng-dev libonig-dev libxml2-dev #installation des biblio necessaire à laravel,composer,..
+    - docker-php-ext-install pdo_mysql zip #extensions pour se connecter à mysql, pour composer 
+    - curl -sS https://getcomposer.org/installer | php #installation de composer 
+    - php composer.phar install --no-interaction --prefer-dist # <=> composer install
+  artifacts:
+    paths:
+      - vendor/
+    expire_in: 1 week
+
+
+test_back:
+  stage: test
+  image: php:8.3
+  services:
+    - name: mysql:8.4
+      alias: db
+  script:
+    - apt-get update && apt-get install -y unzip git libzip-dev libpng-dev libonig-dev libxml2-dev
+    - docker-php-ext-install pdo_mysql zip
+    - curl -sS https://getcomposer.org/installer | php
+    - php composer.phar install --no-interaction --prefer-dist
+    #- until mysql -h db -u laravel -psecret -e "SELECT 1"; do sleep 2; done
+    - php artisan migrate --force #migration pour les features qui utilisent la BD 
+    - ./vendor/bin/pest
+    - ./vendor/bin/phpunit
+  needs:
+    - install_back
+
+
+build_back:
+  stage: build
+  image: php:8.3
+  script:
+    - apt-get update && apt-get install -y unzip git libzip-dev libpng-dev libonig-dev libxml2-dev
+    - docker-php-ext-install pdo_mysql zip
+    - curl -sS https://getcomposer.org/installer | php
+    - php composer.phar install --no-interaction --prefer-dist --no-dev
+    - php artisan config:cache #accelere le chargement de l'app
+    - php artisan route:cache #toute les routes dans un fichier 
+    - php artisan event:cache
+    - php artisan optimize
+  artifacts:
+    paths:
+      - vendor/
+      - bootstrap/cache/
+    expire_in: 1 week
+  needs:
+    - install_back
